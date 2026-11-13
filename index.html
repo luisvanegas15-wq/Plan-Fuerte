@@ -329,8 +329,10 @@ progreso:'<path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6" stroke="currentColor" strok
 const LBL={hoy:'Hoy',plan:'Mi plan',ejercicios:'Ejercicios',nutricion:'Nutrición',progreso:'Progreso'};
 function go(t){tab=t;try{history.replaceState(null,'','#'+t)}catch(e){}render();scrollTo(0,0)}
 function navR(){const n=$('#nav');n.classList.toggle('hide',!profile);n.innerHTML=Object.keys(LBL).map(k=>`<button class="${tab===k?'on':''}" onclick="go('${k}')"><svg viewBox="0 0 24 24">${ICON[k]}</svg>${LBL[k]}</button>`).join('')}
-function render(){navR();const a=$('#app');if(!lic){$('#nav').classList.add('hide');a.innerHTML=vActivar();return}if(welcome){$('#nav').classList.add('hide');a.innerHTML=vWelcome();return}if(!profile){a.innerHTML=onboarding();return}
-a.innerHTML=({hoy:vHoy,plan:vPlan,ejercicios:vLib,nutricion:vNut,progreso:vProg}[tab]||vHoy)()+`<p class="disc">Consulta con un médico antes de iniciar un programa de ejercicio. Detén el ejercicio si sientes dolor.</p>`}
+const TRIAL=3;const trialLeft=()=>lic&&lic.trial?Math.max(0,TRIAL-Math.floor((today()-new Date(lic.date+'T00:00:00'))/864e5)):99;let showAct=false;
+function startTrial(){lic={trial:1,date:iso(today())};store.set('lic',lic);render();toast('🎉 Tienes '+TRIAL+' días de prueba gratis')}
+function render(){navR();const a=$('#app');if(!lic||showAct||trialLeft()<=0){$('#nav').classList.add('hide');a.innerHTML=vActivar();return}if(welcome){$('#nav').classList.add('hide');a.innerHTML=vWelcome();return}if(!profile){a.innerHTML=onboarding();return}
+a.innerHTML=({hoy:vHoy,plan:vPlan,ejercicios:vLib,nutricion:vNut,progreso:vProg}[tab]||vHoy)()+`<p class="disc">Consulta con un médico antes de iniciar un programa de ejercicio. Detén el ejercicio si sientes dolor.</p>`;if(lic.trial){const d=trialLeft();a.insertAdjacentHTML('afterbegin',`<div class="card" style="background:#ff8a3d1f;border-color:#ff8a3d66;padding:10px 14px"><div class="row between"><span class="sm">🎁 Prueba gratis: <b>${d} día${d===1?'':'s'}</b> restante${d===1?'':'s'}</span><button class="btn sm pri" onclick="showAct=true;render()">Activar</button></div></div>`)}}
 const hdr=(t,sub)=>`<div class="top"><div><div class="brand">${BRAND.replace('Fuerte','<b>Fuerte</b>')}</div>${t?`<h1>${t}</h1>`:''}${sub?`<div class="mut sm">${sub}</div>`:''}</div><button class="btn sm ghost" onclick="openSettings()">⚙︎</button></div>`;
 
 /* ---------- Activación y bienvenida ---------- */
@@ -341,11 +343,14 @@ function vActivar(){return brandBig()+`<p class="mut" style="text-align:center;m
 <label class="f">Código de activación</label><input id="ac" placeholder="PF-XXXX-XXXX" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px">
 <div id="aerr" class="sm" style="color:#ff6b6b;margin-top:8px"></div>
 <button class="btn pri full" style="margin-top:14px" onclick="activar()">Activar</button></div>
+${lic&&lic.trial&&trialLeft()<=0?`<div class="card hero"><b>Tu prueba gratis terminó.</b><p class="sm mut" style="margin:6px 0 0">Tu plan y tu progreso están guardados. Activa tu código para seguir entrenando.</p></div>`:''}
+${!lic?`<button class="btn ghost full" onclick="startTrial()">Probar gratis ${TRIAL} días</button><p class="xs mut" style="text-align:center">Sin código. Al activar conservas todo tu progreso.</p>`:''}
+${showAct?`<button class="btn ghost full" onclick="showAct=false;render()">Volver</button>`:''}
 ${SOPORTE?`<p class="sm mut" style="text-align:center">¿No tienes código? <a style="color:var(--ac)" href="https://wa.me/${SOPORTE}">Escríbenos por WhatsApp</a><br>+${SOPORTE}</p>`:''}`}
 function activar(){const n=$('#an').value.trim(),c=normC($('#ac').value);
 if(normN(n).length<3){$('#aerr').textContent='Escribe tu nombre completo.';return}
 if(!c||c!==codeFor(n)){$('#aerr').textContent='El código no coincide con ese nombre. Revisa que esté escrito igual que en tu compra.';return}
-lic={name:n,code:c,date:iso(today())};store.set('lic',lic);welcome=true;ob.name=n.split(/\s+/)[0];render()}
+lic={name:n,code:c,date:iso(today())};store.set('lic',lic);showAct=false;welcome=true;ob.name=n.split(/\s+/)[0];render()}
 function vWelcome(){const nm=lic.name.split(/\s+/)[0];return brandBig()+`<div class="card hero" style="text-align:center;padding:28px 18px;margin-top:20px">
 <div style="font-size:54px">💪</div><h1 style="margin-top:6px">¡Hola, ${nm}!</h1><p style="font-size:17px;margin:8px 0 18px">Te damos la bienvenida a ${BRAND}. Tu licencia quedó activada.</p>
 <div class="card" style="background:var(--card2);margin:0 0 18px"><div class="xs mut">TU FRASE DE HOY</div><p style="font-size:18px;font-weight:600;margin:8px 0 0">“${FRASES[Math.floor(Math.random()*FRASES.length)]}”</p></div>
