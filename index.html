@@ -83,11 +83,11 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px 4px;b
 const BRAND='PlanFuerte';
 const APP_URL='https://luisvanegas15-wq.github.io/Plan-Fuerte/';
 const SOPORTE=''; // WhatsApp de soporte, ej: '573001234567'
-const SECRET='pf26-LV-k7Q9xT';
+const SECRET='';
 function h53(str,seed=0){let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0,ch;i<str.length;i++){ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677)}
 h1=Math.imul(h1^(h1>>>16),2246822507);h1^=Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507);h2^=Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0)}
 const normN=n=>(n||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z]/g,'');
-function codeFor(name){const v=h53(normN(name)+'|'+SECRET).toString(36).toUpperCase().padStart(11,'0').slice(-8);return 'PF-'+v.slice(0,4)+'-'+v.slice(4)}
+function codeFor(){return ''}
 const normC=c=>{const x=(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/^PF/,'');return x.length===8?'PF-'+x.slice(0,4)+'-'+x.slice(4):''};
 const FRASES=['El mejor momento para empezar fue ayer. El segundo mejor es hoy.','No tienes que ser extremo, solo constante.','Cada repetición cuenta. Cada día suma.','Tu único rival es quien eras ayer.','La disciplina te lleva donde la motivación no alcanza.','Pequeños avances todos los días = grandes resultados.','Hoy entrenas por la versión de ti que quieres ser.','No pares cuando estés cansado, para cuando hayas terminado.','El cuerpo logra lo que la mente cree.','Un entreno a la vez. Una semana a la vez.','Sudor hoy, orgullo mañana.','La constancia vence al talento.'];
 const fraseHoy=()=>FRASES[Math.floor(Date.now()/864e5)%FRASES.length];
@@ -338,19 +338,18 @@ const hdr=(t,sub)=>`<div class="top"><div><div class="brand">${BRAND.replace('Fu
 /* ---------- Activación y bienvenida ---------- */
 const brandBig=()=>`<div class="brand" style="font-size:34px;justify-content:center;margin:30px 0 6px">${BRAND.replace('Fuerte','<b>Fuerte</b>')}</div>`;
 function vActivar(){return brandBig()+`<p class="mut" style="text-align:center;margin-top:0">Tu entrenador personal en el bolsillo</p>
-<div class="card" style="margin-top:20px"><h2>Activa tu app</h2><p class="sm mut">Ingresa tu nombre tal como lo registraste en la compra y el código que te enviamos.</p>
-<label class="f">Nombre completo</label><input id="an" placeholder="Ej: Laura Gómez" autocomplete="name">
-<label class="f">Código de activación</label><input id="ac" placeholder="PF-XXXX-XXXX" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:2px">
+<div class="card" style="margin-top:20px"><h2>Activa tu app</h2><p class="sm mut">Abre el <b>enlace de activación</b> que te enviamos después de la compra, o pega aquí el código completo.</p>
+
+<label class="f">Código de activación</label><input id="ac" placeholder="Pega aquí tu código" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false">
 <div id="aerr" class="sm" style="color:#ff6b6b;margin-top:8px"></div>
 <button class="btn pri full" style="margin-top:14px" onclick="activar()">Activar</button></div>
 ${lic&&lic.trial&&trialLeft()<=0?`<div class="card hero"><b>Tu prueba gratis terminó.</b><p class="sm mut" style="margin:6px 0 0">Tu plan y tu progreso están guardados. Activa tu código para seguir entrenando.</p></div>`:''}
 ${!lic?`<button class="btn ghost full" onclick="startTrial()">Probar gratis ${TRIAL} días</button><p class="xs mut" style="text-align:center">Sin código. Al activar conservas todo tu progreso.</p>`:''}
 ${showAct?`<button class="btn ghost full" onclick="showAct=false;render()">Volver</button>`:''}
 ${SOPORTE?`<p class="sm mut" style="text-align:center">¿No tienes código? <a style="color:var(--ac)" href="https://wa.me/${SOPORTE}">Escríbenos por WhatsApp</a><br>+${SOPORTE}</p>`:''}`}
-function activar(){const n=$('#an').value.trim(),c=normC($('#ac').value);
-if(normN(n).length<3){$('#aerr').textContent='Escribe tu nombre completo.';return}
-if(!c||c!==codeFor(n)){$('#aerr').textContent='El código no coincide con ese nombre. Revisa que esté escrito igual que en tu compra.';return}
-lic={name:n,code:c,date:iso(today())};store.set('lic',lic);showAct=false;welcome=true;ob.name=n.split(/\s+/)[0];render()}
+const LIC_PUB={x:'3K1sKw21aD8hwYyrfECZw2KG8nC2H8hGvyIB564SF-w',y:'Hi5MWU8Aenc7wf_Q9oqS5mn9iPxMjtiMaCFrghDcqSc'},LIC_APP='PLANFUERTE1';const b64uB=s=>{s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return Uint8Array.from(atob(s),c=>c.charCodeAt(0))};async function verifyLic(t){try{t=String(t||'').trim();const m=t.match(/activar=([^&\s]+)/);if(m)t=decodeURIComponent(m[1]);const[e,f]=t.split('.');if(!e||!f)return null;const name=new TextDecoder().decode(b64uB(e)).trim();if(name.length<2)return null;const k=await crypto.subtle.importKey('jwk',{kty:'EC',crv:'P-256',x:LIC_PUB.x,y:LIC_PUB.y},{name:'ECDSA',namedCurve:'P-256'},false,['verify']);const ok=await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},k,b64uB(f),new TextEncoder().encode(LIC_APP+'|'+name));return ok?name:null}catch(e){return null}}
+async function activar(){const t=($('#ac').value||'').trim();const n=await verifyLic(t);if(!n){$('#aerr').textContent='El código no es válido. Abre el enlace de activación que te enviamos o pega el código completo.';return}licOK(n)}
+function licOK(n){const c='LV2';lic={name:n,code:c,v:2,date:iso(today())};store.set('lic',lic);showAct=false;welcome=true;ob.name=n.split(/\s+/)[0];render()}
 function vWelcome(){const nm=lic.name.split(/\s+/)[0];return brandBig()+`<div class="card hero" style="text-align:center;padding:28px 18px;margin-top:20px">
 <div style="font-size:54px">💪</div><h1 style="margin-top:6px">¡Hola, ${nm}!</h1><p style="font-size:17px;margin:8px 0 18px">Te damos la bienvenida a ${BRAND}. Tu licencia quedó activada.</p>
 <div class="card" style="background:var(--card2);margin:0 0 18px"><div class="xs mut">TU FRASE DE HOY</div><p style="font-size:18px;font-weight:600;margin:8px 0 0">“${FRASES[Math.floor(Math.random()*FRASES.length)]}”</p></div>
@@ -582,5 +581,6 @@ window.addEventListener('hashchange',()=>{const t=location.hash.slice(1);if(LBL[
 if(!LBL[tab])tab='hoy';
 render();
 </script>
+<script>(function(){const m=(location.hash||'').match(/activar=([^&]+)/);if(!m)return;verifyLic(decodeURIComponent(m[1])).then(n=>{try{history.replaceState(null,'',location.pathname)}catch(e){}if(n)licOK(n);else{const M='Ese enlace de activación no es válido. Escríbenos por WhatsApp al 320 290 3722.';showAct=true;render();const e=document.getElementById('aerr');if(e)e.textContent=M;else{const d=document.createElement('div');d.textContent=M;d.style.cssText='position:fixed;left:16px;right:16px;bottom:24px;z-index:9999;background:#c4473d;color:#fff;padding:14px;border-radius:12px;font:600 15px system-ui;text-align:center';document.body.appendChild(d);setTimeout(()=>d.remove(),8000)}}})})();</script>
 </body>
 </html>
