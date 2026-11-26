@@ -258,28 +258,53 @@ const off=p=>[p[0]-5,p[1]-1];
 function fill(P){P.e2=P.e2||off(P.e);P.w2=P.w2||off(P.w);P.k2=P.k2||off(P.k);P.f2=P.f2||off(P.f);return P}
 for(const id in EX){const x=EX[id];x.PA=fill({...ST,...x.A});x.PB=fill({...ST,...x.A,...x.B})}
 
-/* ---------- Figura animada ---------- */
-function fig(id){const x=EX[id];let p='';(x.props||[]).forEach(r=>p+=`<rect x="${r[0]}" y="${r[1]}" width="${r[2]}" height="${r[3]}" rx="3" fill="#3a4150"/>`);
-const bc=x.front?'#e8eaf0':'#5b6475';
-return `<svg class="fig" data-ex="${id}" viewBox="0 0 200 200"><line x1="10" y1="188" x2="190" y2="188" stroke="#2f3542" stroke-width="3"/>${p}
-${x.eq==='cable'?`<line class="cb" stroke="#8a90a0" stroke-width="2"/>`:''}
-<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="9">
-<polyline class="ba" stroke="${bc}"/><polyline class="bl" stroke="${bc}"/>
-<polyline class="to" stroke="#e8eaf0" stroke-width="12"/><polyline class="fl" stroke="#e8eaf0"/><polyline class="fa" stroke="#c6f432"/></g>
-<circle class="hd" r="11" fill="#e8eaf0"/><g class="eq"></g></svg>`}
-const pts=(...a)=>a.map(q=>q.join(',')).join(' ');
-function drawFigs(ts){const t=.5-.5*Math.cos(ts/2400*2*Math.PI);
-document.querySelectorAll('svg.fig').forEach(s=>{const x=EX[s.dataset.ex];if(!x)return;const P={};
+/* ---------- Figura animada (personita con volumen) ---------- */
+const SK='#e3a67c',SK2='#b27a57',SH='#2f6fed',SH2='#2253bd',PT='#2b303c',PT2='#1d212a',HR='#2b1d15',SHOE='#eef0f4',SHOE2='#b9bec9',MU='#c6f432';
+function fig(id){const x=EX[id];let p='';(x.props||[]).forEach(r=>p+=`<rect x="${r[0]}" y="${r[1]}" width="${r[2]}" height="${r[3]}" rx="3" fill="#3b4252"/><rect x="${r[0]}" y="${r[1]}" width="${r[2]}" height="${Math.min(3,r[3])}" rx="1.5" fill="#566078"/>`);
+return `<svg class="fig" data-ex="${id}" viewBox="0 0 200 200"><ellipse cx="100" cy="190" rx="78" ry="5" fill="#000" opacity=".35"/><line x1="8" y1="188" x2="192" y2="188" stroke="#2f3542" stroke-width="2"/>${p}<g class="bd"></g></svg>`}
+const fx=n=>n.toFixed(1),LP=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t],AD=(a,v,k)=>[a[0]+v[0]*k,a[1]+v[1]*k];
+function UN(a,b){const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1;return[dx/l,dy/l]}
+function limb(a,b,r1,r2,c,o){const u=UN(a,b),n=[-u[1],u[0]];const P=[AD(a,n,r1),AD(b,n,r2),AD(b,n,-r2),AD(a,n,-r1)];
+return `<g fill="${c}"${o!=null?` opacity="${o}"`:''}><path d="M${P.map(q=>fx(q[0])+','+fx(q[1])).join('L')}Z"/><circle cx="${fx(a[0])}" cy="${fx(a[1])}" r="${r1}"/><circle cx="${fx(b[0])}" cy="${fx(b[1])}" r="${r2}"/></g>`}
+function ell(c,rx,ry,ang,fill,o){return `<ellipse cx="${fx(c[0])}" cy="${fx(c[1])}" rx="${rx}" ry="${ry}" transform="rotate(${fx(ang)} ${fx(c[0])} ${fx(c[1])})" fill="${fill}"${o!=null?` opacity="${o}"`:''}/>`}
+function leg(hp,k,f,far){const s=far?SK2:SK,pt=far?PT2:PT;
+return limb(k,f,6.6,4.8,s)+limb(hp,k,9.6,6.8,s)+limb(hp,LP(hp,k,.58),10.6,8.3,pt)+ell([f[0]+4,f[1]-1.5],7.6,4,0,far?SHOE2:SHOE)}
+function arm(sh,e,w,far){const s=far?SK2:SK;
+return limb(sh,e,6.3,4.9,s)+limb(e,w,4.7,3.6,s)+limb(sh,LP(sh,e,.42),7.3,6.2,far?SH2:SH)+`<circle cx="${fx(w[0])}" cy="${fx(w[1])}" r="3.9" fill="${s}"/>`}
+function plate(c){return `<circle cx="${fx(c[0])}" cy="${fx(c[1])}" r="16" fill="#23272f" stroke="#ff8a3d" stroke-width="2.5"/><circle cx="${fx(c[0])}" cy="${fx(c[1])}" r="9" fill="none" stroke="#3a404d" stroke-width="2"/><circle cx="${fx(c[0])}" cy="${fx(c[1])}" r="3.2" fill="#ff8a3d"/>`}
+function dumb(c){return `<g transform="translate(${fx(c[0])} ${fx(c[1])})"><rect x="-9" y="-1.6" width="18" height="3.2" rx="1.2" fill="#9aa1b0"/><rect x="-12" y="-6" width="5" height="12" rx="1.6" fill="#ff8a3d"/><rect x="7" y="-6" width="5" height="12" rx="1.6" fill="#ff8a3d"/></g>`}
+function figBody(x,P,t){const n=P.n,hp=P.hp,h=P.h,ax=UN(n,hp),fr=[ax[1],-ax[0]],ang=Math.atan2(ax[1],ax[0])*180/Math.PI,sh=LP(n,hp,.1),up=UN(n,h);
+const mo=fx(.45+.4*t),m=(x.t&&x.t[0]||'')+' '+(x.m||'');let g='';
+if(x.eq==='cable'&&x.anchor)g+=`<line x1="${x.anchor[0]}" y1="${x.anchor[1]}" x2="${fx(P.w[0])}" y2="${fx(P.w[1])}" stroke="#8a90a0" stroke-width="1.6"/>`;
+g+=leg(hp,P.k2,P.f2,1)+arm(sh,P.e2,P.w2,1);
+// torso
+const T=(k,o)=>AD(LP(n,hp,k),fr,o);const tp=[T(0,9.5),T(.28,12.5),T(.75,10),T(1,10.5),T(1,-10.5),T(.7,-9.5),T(.25,-11),T(0,-9.5)];
+g+=limb(n,LP(n,h,.55),4.3,4.3,SK);
+g+=`<path d="M${tp.map(q=>fx(q[0])+','+fx(q[1])).join('L')}Z" fill="${SH}" stroke="${SH}" stroke-width="5" stroke-linejoin="round"/>`;
+g+=leg(hp,P.k,P.f,0);
+// músculo trabajado (torso / pierna)
+if(/Pectoral|Pecho/.test(m)&&!/Tríceps/.test(x.t[0]))g+=ell(T(.24,6.5),7.5,5,ang,MU,mo);
+else if(/Dorsal|Espalda/.test(m))g+=ell(T(.33,-6),10,5,ang,MU,mo);
+else if(/Abdomen|Recto|Oblicuo|Core/.test(m))g+=ell(T(.66,5.5),7.5,5,ang,MU,mo);
+if(/Glúteo/.test(x.t[0]))g+=`<circle cx="${fx(T(1,-6)[0])}" cy="${fx(T(1,-6)[1])}" r="7.5" fill="${MU}" opacity="${mo}"/>`;
+else if(/Cuádriceps|Isquio|Piernas/.test(m)&&!/Pantorr/.test(x.t[0]))g+=limb(LP(hp,P.k,.15),LP(hp,P.k,.85),8.2,6,MU,mo);
+if(/Pantorr/.test(x.t[0]))g+=limb(P.k,P.f,5.6,4,MU,mo);
+// cabeza
+const hc=AD(AD(h,up,2.2),fr,-2.2);g+=`<circle cx="${fx(hc[0])}" cy="${fx(hc[1])}" r="10.3" fill="${HR}"/>`;
+const fc=AD(h,fr,1.2);g+=`<circle cx="${fx(fc[0])}" cy="${fx(fc[1])}" r="9.6" fill="${SK}"/>`;
+const ey=AD(AD(h,fr,6.2),up,1.6);g+=`<circle cx="${fx(ey[0])}" cy="${fx(ey[1])}" r="1.2" fill="#2a1d16"/>`;
+// brazo cercano + equipo
+let eq='';if(x.eq==='bar')eq=plate(P.w);if(x.eq==='db')eq=(x.front?dumb(P.w2):'')+dumb(P.w);if(x.eq==='pad')eq=`<circle cx="${fx(P.f[0])}" cy="${fx(P.f[1])}" r="7" fill="#ff8a3d"/>`;if(x.eq==='cable')eq=`<rect x="${fx(P.w[0]-6)}" y="${fx(P.w[1]-2)}" width="12" height="4" rx="2" fill="#ff8a3d"/>`;
+g+=arm(sh,P.e,P.w,0);
+if(/Deltoides|Hombros/.test(m))g+=`<circle cx="${fx(sh[0])}" cy="${fx(sh[1])}" r="7" fill="${MU}" opacity="${mo}"/>`;
+if(/Bíceps|Tríceps|Brazos/.test(x.t[0]+' '+x.m))g+=limb(sh,P.e,5.4,4.3,MU,mo);
+g+=eq+(x.eq==='db'?`<circle cx="${fx(P.w[0])}" cy="${fx(P.w[1])}" r="3.9" fill="${SK}"/>`:'');
+return g}
+let lastF=0;
+function drawFigs(ts){requestAnimationFrame(drawFigs);if(ts-lastF<33)return;lastF=ts;const t=.5-.5*Math.cos(ts/2400*2*Math.PI),vh=innerHeight;
+document.querySelectorAll('svg.fig').forEach(s=>{const x=EX[s.dataset.ex];if(!x)return;const r=s.getBoundingClientRect();if(r.bottom<0||r.top>vh)return;const P={};
 for(const k in x.PA){const a=x.PA[k],b=x.PB[k];P[k]=[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]}
-const q=c=>s.querySelector(c);
-q('.ba').setAttribute('points',pts(P.n,P.e2,P.w2));q('.bl').setAttribute('points',pts(P.hp,P.k2,P.f2));
-q('.to').setAttribute('points',pts(P.n,P.hp));q('.fl').setAttribute('points',pts(P.hp,P.k,P.f));
-q('.fa').setAttribute('points',pts(P.n,P.e,P.w));const hd=q('.hd');hd.setAttribute('cx',P.h[0]);hd.setAttribute('cy',P.h[1]);
-let eq='';if(x.eq==='bar')eq=`<circle cx="${P.w[0]}" cy="${P.w[1]}" r="13" fill="#ff8a3d55" stroke="#ff8a3d" stroke-width="3"/><circle cx="${P.w[0]}" cy="${P.w[1]}" r="3" fill="#ff8a3d"/>`;
-if(x.eq==='db'){const hs=x.front?[P.w,P.w2]:[P.w];hs.forEach(h=>eq+=`<rect x="${h[0]-9}" y="${h[1]-4}" width="18" height="8" rx="3" fill="#ff8a3d"/>`)}
-if(x.eq==='pad')eq=`<circle cx="${P.f[0]}" cy="${P.f[1]}" r="7" fill="#ff8a3d"/>`;
-if(x.eq==='cable'){const cb=q('.cb');cb.setAttribute('x1',x.anchor[0]);cb.setAttribute('y1',x.anchor[1]);cb.setAttribute('x2',P.w[0]);cb.setAttribute('y2',P.w[1]);eq=`<circle cx="${P.w[0]}" cy="${P.w[1]}" r="5" fill="#ff8a3d"/>`}
-q('.eq').innerHTML=eq});requestAnimationFrame(drawFigs)}
+const bd=s.querySelector('.bd');if(bd)bd.innerHTML=figBody(x,P,t)})}
 requestAnimationFrame(drawFigs);
 
 /* ---------- Generador del plan ---------- */
