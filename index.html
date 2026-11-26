@@ -286,6 +286,7 @@ requestAnimationFrame(drawFigs);
 const DN=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const TPL={3:{wd:[1,3,5],d:[['Cuerpo completo A',['sentadilla','banca','remo','laterales','curl','plancha']],['Cuerpo completo B',['rumano','militar','jalon','zancadas','triceps','crunch']],['Cuerpo completo C',['prensa','press_inclinado_db','jalon','militar','curl_martillo','talones']]]},
 4:{wd:[1,2,4,5],d:[['Torso 1',['banca','remo','militar','jalon','curl','triceps']],['Pierna 1',['sentadilla','rumano','zancadas','talones','plancha']],['Torso 2',['flexiones','jalon','remo','laterales','triceps','curl']],['Pierna 2',['rumano','prensa','hip_thrust','curl_femoral','talones','crunch']]]},
+5:{wd:[1,2,3,5,6],d:[['Pecho, tríceps y hombro',['banca','press_inclinado_db','militar','laterales','fondos','triceps']],['Espalda y bíceps',['dominadas','remo','jalon','remo_polea','curl','curl_martillo']],['Pierna 1',['sentadilla','rumano','prensa','extension_cuad','curl_femoral','talones']],['Torso completo',['banca','remo','militar','jalon','curl','triceps']],['Pierna 2',['rumano','hip_thrust','bulgara','prensa','curl_femoral','talones']]]},
 6:{wd:[1,2,3,4,5,6],d:[['Empuje 1',['banca','militar','flexiones','laterales','triceps']],['Jalón 1',['jalon','remo','curl','plancha']],['Pierna 1',['sentadilla','rumano','zancadas','talones','crunch']],['Empuje 2',['militar','banca','laterales','flexiones','triceps']],['Jalón 2',['remo','dominadas','remo_polea','curl_martillo','crunch']],['Pierna 2',['prensa','rumano','bulgara','extension_cuad','curl_femoral','talones']]]}};
 function phase(){const W=weekNum(),w=(W-1)%12+1,cyc=Math.floor((W-1)/12)+1;
 const P=w<=4?['a','Adaptación','Aprende la técnica. Termina cada serie con 2-3 repeticiones en reserva.']:w<=8?['p','Progresión','Sube peso cada semana que completes las repeticiones. Deja 1-2 en reserva.']:w<=11?['i','Intensificación','Una serie extra en los ejercicios principales. Llega cerca del fallo (0-1 en reserva).']:['d','Descarga','Semana suave: la mitad de series y ~60% del peso. Tu cuerpo se recupera y vuelve más fuerte.'];
@@ -364,8 +365,8 @@ function onboarding(){return `<div class="brand" style="font-size:26px;margin:10
 <label class="f">Objetivo</label>${chips('goal',[['m','Ganar músculo'],['f','Ganar fuerza'],['t','Tonificar y resistencia']])}
 <label class="f">Experiencia</label>${chips('level',[['p','Principiante'],['i','Intermedio (+6 meses)'],['a','Avanzado (+2 años)']])}
 <label class="f">¿Dónde entrenas?</label>${chips('equip',[['gym','Gimnasio'],['casa','Casa con mancuernas'],['cuerpo','Sin equipo']])}
-<label class="f">Días por semana</label>${chips('days',[[3,'3 días'],[4,'4 días'],[6,'6 días']])}
-<p class="xs mut" style="margin:6px 0 0">${ob.days==3?'Cuerpo completo · ideal para empezar':ob.days==4?'Torso / Pierna · el más equilibrado':'Empuje / Jalón / Pierna · intermedio o avanzado'}</p>
+<label class="f">Días por semana</label>${chips('days',[[3,'3 días'],[4,'4 días'],[5,'5 días'],[6,'6 días']])}
+<p class="xs mut" style="margin:6px 0 0">${ob.days==3?'Cuerpo completo · ideal para empezar':ob.days==4?'Torso / Pierna · el más equilibrado':ob.days==5?'Empuje / Jalón / Pierna / Torso / Pierna · frecuencia 2 por músculo':'Empuje / Jalón / Pierna · intermedio o avanzado'}</p>
 <label class="f">Tiempo por sesión</label>${chips('min',[[45,'45 min'],[60,'60 min'],[75,'75+ min']])}
 <label class="f">¿A qué hora entrenas?</label><input type="time" value="${ob.hour}" onchange="ob.hour=this.value"></div>
 <button class="btn pri full" onclick="createPlan()">Crear mi plan</button>`}
@@ -502,7 +503,7 @@ f:[['Aguacate',.15,'g'],['Aceite de oliva (cdta)',4.5,'u'],['Maní/almendras',.5
 const MEALS=[['Desayuno',.25,['Huevos','Yogur griego'],['Arepa mediana','Avena en hojuelas','Pan integral (tajada)']],['Media mañana',.1,['Yogur griego','Huevos'],['Avena en hojuelas','Plátano maduro']],
 ['Almuerzo',.35,['Pechuga de pollo','Carne de res magra','Pescado (tilapia)'],['Arroz cocido','Papa cocida','Fríjoles/lentejas cocidos']],['Pre-entreno',.1,['Yogur griego','Atún en agua'],['Plátano maduro','Pan integral (tajada)']],['Cena',.2,['Pechuga de pollo','Pescado (tilapia)','Atún en agua'],['Papa cocida','Arepa mediana','Arroz cocido']]];
 function nutCalc(){const n=profile.nut;if(!n)return null;const bw=body.filter(b=>b.peso),w=bw.length?+bw[bw.length-1].peso:+n.peso;
-const bmr=10*w+6.25*n.est-5*n.edad+(n.sexo==='h'?5:-161),f={3:1.45,4:1.55,6:1.7}[profile.days]||1.5,tdee=bmr*f;
+const bmr=10*w+6.25*n.est-5*n.edad+(n.sexo==='h'?5:-161),f={3:1.45,4:1.55,5:1.62,6:1.7}[profile.days]||1.5,tdee=bmr*f;
 const g=profile.goal,kcal=Math.round((g==='m'?tdee*1.1:g==='f'?tdee*1.05:tdee*.85)/10)*10;
 const P=Math.round(w*(g==='t'?2:1.8)),F=Math.round(w*.9),C=Math.max(0,Math.round((kcal-P*4-F*9)/4));
 const agua=Math.round(w*35/100)/10,aguaE=Math.round((w*35+500)/100)/10;return{w,kcal,P,C,F,agua,aguaE,tdee:Math.round(tdee)}}
